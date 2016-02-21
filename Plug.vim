@@ -54,6 +54,9 @@ call plug#begin('~/.vim/plugged')
 
   " Better whitespace highlighting for Vim
   Plug 'ntpeters/vim-better-whitespace'
+
+  " Simple todo for Vim
+  Plug 'vitalk/vim-simple-todo'
 " }}}
 
 " Commands {{{
