@@ -40,6 +40,7 @@ runtime! config/plugin/rainbow.vim
 runtime! config/plugin/signify.vim
 runtime! config/plugin/tagbar.vim
 runtime! config/plugin/undotree.vim
+runtime! config/plugin/ultisnips.vim
 
 if has('nvim')
   runtime! config/plugin/fzf.vim
@@ -55,9 +56,10 @@ endif
 " Language Configuration
 " ----------------------------------------
 
+runtime! config/lang/polyglot.vim
 runtime! config/lang/elm.vim
 runtime! config/lang/golang.vim
-runtime! config/lang/json.vim
+runtime! config/lang/ruby.vim
 runtime! config/lang/rust.vim
 runtime! config/lang/yaml.vim
 

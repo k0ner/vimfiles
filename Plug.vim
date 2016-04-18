@@ -15,14 +15,16 @@ call plug#begin('~/.vim/plugged')
   Plug 'tpope/vim-projectionist'
 
   " A command-line fuzzy finder written in Go
-  Plug 'junegunn/fzf', { 'do': 'yes \| ./install'  }
-  if !has('nvim')
-    " Active fork of kien/ctrlp.vim. Fuzzy file, buffer, mru, tag, etc finder.
-    Plug 'ctrlpvim/ctrlp.vim'
+  let g:fzf_command_prefix = 'FZF'
+  Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+  Plug 'junegunn/fzf.vim'
 
-    " Fast vim CtrlP matcher based on python
-    Plug 'FelikZ/ctrlp-py-matcher'
-  endif
+
+  " Active fork of kien/ctrlp.vim. Fuzzy file, buffer, mru, tag, etc finder.
+  Plug 'ctrlpvim/ctrlp.vim'
+
+  " Fast vim CtrlP matcher based on python
+  Plug 'FelikZ/ctrlp-py-matcher'
 " }}}
 
 " UI Additions {{{
@@ -45,9 +47,6 @@ call plug#begin('~/.vim/plugged')
 
   " Show a diff via Vim sign column.
   Plug 'mhinz/vim-signify'
-
-  " Toggle the cursor shape in the terminal
-  Plug 'jszakmeister/vim-togglecursor'
 
   " Seamless navigation between tmux panes and vim splits
   Plug 'christoomey/vim-tmux-navigator'
@@ -105,9 +104,6 @@ call plug#begin('~/.vim/plugged')
   " a Git wrapper so awesome, it should be illegal; :Gblame, etc
   Plug 'tpope/vim-fugitive'
 
-  " gitk for Vim.
-  Plug 'gregsexton/gitv', { 'on': 'Gitv' }
-
   " easily search for, substitute, and abbreviate multiple variants of a word
   Plug 'tpope/vim-abolish'
 
@@ -121,10 +117,10 @@ call plug#begin('~/.vim/plugged')
   Plug 'godlygeek/tabular'
 
   " Vim plugin for the Perl module / CLI script 'ack'
-  Plug 'mileszs/ack.vim', { 'on': 'Ack' }
+  Plug 'mileszs/ack.vim'
 
   " Vim plugin for the_silver_searcher, 'ag', a replacement for the Perl module / CLI script 'ack'
-  Plug 'rking/ag.vim', { 'on': 'Ag' }
+  Plug 'rking/ag.vim'
 
   " Send test commands to a pipe.
   Plug 'luan/vipe', { 'do': function('InstallVipe') }
@@ -133,9 +129,10 @@ call plug#begin('~/.vim/plugged')
   Plug 'tpope/vim-dispatch'
 
   " Syntax checking hacks for vim
-  if has('nvim')
+  if $ALL_PLUGINS == 'true' || has('nvim')
     Plug 'benekastah/neomake'
-  else
+  endif
+  if $ALL_PLUGINS == 'true' || !has('nvim')
     Plug 'scrooloose/syntastic'
   endif
 
@@ -150,15 +147,6 @@ call plug#begin('~/.vim/plugged')
 
   " The ultimate undo history visualizer for VIM
   Plug 'mbbill/undotree'
-
-  " vimscript plugin library. It is designed for plugin authors.
-  Plug 'google/vim-maktaba'
-
-  " utility for syntax-aware code formatting
-  Plug 'google/vim-codefmt'
-
-  " utility for configuring maktaba plugins
-  Plug 'google/vim-glaive'
 " }}}
 
 " Automatic Helpers {{{
@@ -174,16 +162,20 @@ call plug#begin('~/.vim/plugged')
   " pairs of handy bracket mappings; e.g. [<Space> and ]<Space> add newlines before and after the cursor line
   Plug 'tpope/vim-unimpaired'
 
-  " auto-close paired chars, e.g. (), {}
-  Plug 'Townk/vim-autoclose', { 'on': 'AutoCloseOn' }
-
-  if has('nvim')
+  " Speed up Vim by updating folds only when called-for.
+  Plug 'Konfekt/FastFold'
+  if $ALL_PLUGINS == 'true' || has('nvim')
     " provides an asynchronous keyword completion system in the current buffer
     Plug 'Shougo/deoplete.nvim'
-  elseif !(has('lua') && (v:version > 703 || v:version == 703 && has('patch885')))
+    " deoplete.nvim source for Golang and gocode or vim-go
+    Plug 'zchee/deoplete-go', { 'do': 'make' }
+  endif
+
+  if $ALL_PLUGINS == 'true' || !has('lua')
     " Ultimate auto-completion system for Vim. Note: It is not maintained well. You should use neocomplete instead.
     Plug 'Shougo/neocomplcache.vim'
-  else
+  endif
+  if $ALL_PLUGINS == 'true' || has('lua')
     " Next generation completion framework after neocomplcache
     Plug 'Shougo/neocomplete.vim'
   endif
@@ -206,16 +198,19 @@ call plug#begin('~/.vim/plugged')
 " }}}
 
 " Snippets {{{
-  " neo-snippet plugin contains neocomplcache snippets source
-  Plug 'Shougo/neosnippet.vim'
+  "UltiSnips - The ultimate snippet solution for Vim. Send pull requests to SirVer/ultisnips!
+  Plug 'SirVer/ultisnips'
 
-  " The standard snippets repository for neosnippet
-  Plug 'Shougo/neosnippet-snippets'
+  " vim-snipmate default snippets (Previously snipmate-snippets)
+  Plug 'honza/vim-snippets'
 " }}}
 
 " Language specific {{{
+  " A solid language pack for Vim.
+  " Adds 70+ languages and optimizes loading and installing.
+  Plug 'sheerun/vim-polyglot'
+
   " Ruby {{{
-    Plug 'vim-ruby/vim-ruby',           { 'for': ['ruby', 'rake'] }
     Plug 'tpope/vim-rails',             { 'for': ['ruby', 'rake'] }
     Plug 'tpope/vim-rake',              { 'for': ['ruby', 'rake'] }
     Plug 'tpope/vim-bundler',           { 'for': ['ruby', 'rake'] }
@@ -224,7 +219,6 @@ call plug#begin('~/.vim/plugged')
   " }}}
 
   " Clojure {{{
-    Plug 'guns/vim-clojure-static', { 'for': ['clojure'] }
     Plug 'tpope/vim-classpath'
     Plug 'tpope/vim-fireplace',     { 'for': ['clojure'] }
     Plug 'tpope/vim-salve'
@@ -232,21 +226,9 @@ call plug#begin('~/.vim/plugged')
     Plug 'tpope/vim-sexp-mappings-for-regular-people'
   " }}}
 
-  " Scala {{{
-    Plug 'derekwyatt/vim-scala', { 'for': ['scala'] }
-  " }}}
-
   " Go {{{
     Plug 'fatih/vim-go'
-    Plug 'nsf/gocode', { 'rtp': 'vim', 'do': '~/.vim/plugged/gocode/vim/symlink.sh' }
-  " }}}
-
-  " Rust {{{
-    Plug 'rust-lang/rust.vim'
-  " }}}
-
-  " Docker {{{
-    Plug 'honza/dockerfile.vim'
+    Plug 'godoctor/godoctor.vim'
   " }}}
 
   " Markdown {{{
@@ -254,21 +236,13 @@ call plug#begin('~/.vim/plugged')
   " }}}
 
   " JavaScript {{{
-    Plug 'pangloss/vim-javascript',  { 'for': ['javascript']        }
-    Plug 'mxw/vim-jsx',              { 'for': ['javascript']        }
     Plug 'maksimr/vim-jsbeautify',   { 'for': ['javascript']        }
-    Plug 'kchmck/vim-coffee-script', { 'for': ['coffee']            }
-    Plug 'elzr/vim-json'
   " }}}
 
   " CSS / HTML {{{
     Plug 'mattn/emmet-vim'
-    Plug 'tpope/vim-haml',            { 'for': ['haml']              }
-    Plug 'nono/vim-handlebars',       { 'for': ['handlebars']        }
     Plug 'cakebaker/scss-syntax.vim', { 'for': ['scss','sass']       }
     Plug 'hail2u/vim-css3-syntax',    { 'for': ['css','scss','sass'] }
-    Plug 'othree/html5.vim'
-    Plug 'juvenn/mustache.vim',       { 'for': ['mustache']          }
     Plug 'gregsexton/MatchTag'
   " }}}
 
@@ -277,33 +251,16 @@ call plug#begin('~/.vim/plugged')
     Plug 'syngan/vim-vimlint',    { 'for': 'vim' }
   " }}}
 
-  " Elixir {{{
-    Plug 'elixir-lang/vim-elixir', { 'for': 'elixir' }
-  " }}}
-
   " Fish {{{
     Plug 'dag/vim-fish', { 'for': 'fish' }
   " }}}
 
   " Elm {{{
-    Plug 'lambdatoast/elm.vim', { 'for': 'elm' }
-  " }}}
-
-  " YAML {{{
-  Plug 'stephpy/vim-yaml', { 'for': 'yaml' }
+    Plug 'elmcast/elm-vim', { 'for': 'elm' }
   " }}}
 " }}}
 
 source $HOME/.vimrc.local.plugins
 
 call plug#end()
-
-if has('nvim')
-  call maktaba#json#python#Disable()
-endif
-
-try
-  call glaive#Install()
-catch
-endtry
 

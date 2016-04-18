@@ -91,58 +91,80 @@ fi
 
 green='\033[0;32m'
 yellow='\033[0;33m'
+red='\033[0;31m'
 bold=`tput bold`
 normal=`tput sgr0`
 end_color='\033[0;m'
 
-if which go > /dev/null; then
-  echo -e "${yellow}INSTALL${end_color} ${bold}golang${normal} dependencies..."
-  gopackages="\
-    github.com/golang/lint/golint \
-    github.com/jstemmer/gotags \
-    github.com/kisielk/errcheck \
-    github.com/nsf/gocode \
-    golang.org/x/tools/cmd/godoc \
-    golang.org/x/tools/cmd/goimports \
-    golang.org/x/tools/cmd/gorename \
-    golang.org/x/tools/cmd/oracle \
-    golang.org/x/tools/cmd/vet \
-    "
+if which elm > /dev/null; then
+  echo -e "${yellow}INSTALL${end_color} ${bold}elm${normal} dependencies..."
+  if which npm > /dev/null; then
+    npmpackages="\
+      elm-test \
+      elm-oracle \
+      "
 
-  for p in $gopackages; do
-    echo -e "\t${yellow}INSTALL${end_color} ${bold}${p}${normal}..."
-    go get -f -u $p
-    echo -e "\t${green}DONE${end_color}    ${bold}${p}${normal}"
-  done
-  echo -e "${green}DONE${end_color}    ${bold}golang${normal} dependencies"
-fi
-
-vim +'silent! PlugClean!|' +'qall!'
-
-if which nvim > /dev/null; then
-  nvim +'silent! PlugClean!|' +'qall!'
-fi
-
-vimcmd=""
-if [ $UPDATE == 1 ]; then
-  vimcmd=$vimcmd"silent! PlugUpdate!|"
-else
-  vimcmd=$vimcmd"silent! PlugInstall!|"
-fi
-vimcmd=$vimcmd"silent! GoInstallBinaries!|"
-
-if [ $INTERACTIVE == 1 ] ; then
-  vim +"$vimcmd" +'qall!'
-else
-  vim +"$vimcmd" +'qall!' > /dev/null
-fi
-
-if which nvim > /dev/null; then
-  if [ $INTERACTIVE == 1 ] ; then
-    nvim +"$vimcmd" +'qall!'
+    for p in $npmpackages; do
+      (
+        echo -e "\t${yellow}INSTALL${end_color} ${bold}${p}${normal}..."
+        if npm install -g $p; then
+          echo -e "\t${green}DONE${end_color}    ${bold}${p}${normal}"
+        else
+          echo -e "\t${red}ERROR${end_color}    ${bold}${p}${normal}"
+        fi
+      ) &
+    done
   else
-    nvim +"$vimcmd" +'qall!' > /dev/null
+    echo -e "\t${red}ERROR${end_color} ${bold}NPM not found, some elm dependencies were skipped${normal}!"
   fi
+
+  (
+    echo -e "\t${yellow}INSTALL${end_color} ${bold}elm-format${normal}..."
+    brew tap homebrew/devel-only; brew install --devel elm-format
+    echo -e "\t${green}DONE${end_color}    ${bold}elm-format${normal}"
+  ) &
+  wait
+  echo -e "${green}DONE${end_color}    ${bold}elm${normal} dependencies"
+fi
+
+if which npm > /dev/null; then
+  npm install -g livedown
+fi
+
+vim=vim
+if which nvim > /dev/null; then
+  vim=nvim
+fi
+
+echo -e "${yellow}INSTALL${end_color} ${bold}vim plugins${normal} (may take a while)..."
+exec 4>&1 3>/dev/null
+if [ $INTERACTIVE != 1 ] ; then
+  if which nvim > /dev/null; then
+    vim='nvim --headless'
+  else
+    exec 4>&1 1>&3 2>&3
+  fi
+fi
+
+ALL_PLUGINS='true' $vim +'silent! PlugClean!' +'silent! PlugUpdate!' +'qall!'
+
+echo -e "${green}DONE${end_color} ${bold}vim plugins${normal}" >&4
+
+if which nvim > /dev/null; then
+  vim='nvim --headless'
+fi
+
+if which nvim > /dev/null; then
+  $vim +'UpdateRemotePlugins' +'qall!'
+  echo
+fi
+
+if which go > /dev/null; then
+  mkdir -p gobin
+  echo -e "${yellow}INSTALL${end_color} ${bold}go binaries${normal} (may take a while)..." >&4
+  $vim +'silent! GoUpdateBinaries' +'GoDoctorInstall' +'qall!'
+  GOBIN=$PWD/gobin $PWD/gobin/gometalinter --install --update
+  echo -e "${green}DONE${end_color} ${bold}go binaries${normal}" >&4
 fi
 
 popd

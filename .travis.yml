@@ -1,16 +1,24 @@
-sudo: false
-before_script:
-    - git clone https://github.com/syngan/vim-vimlint /tmp/vim-vimlint
-    - git clone https://github.com/ynkdir/vim-vimlparser /tmp/vim-vimlparser
+language: python
 env:
-  GOPATH=$HOME/go
+  - CI_TARGET=vim GOPATH=$HOME/go
+  - CI_TARGET=neovim GOPATH=$HOME/go
+python:
+  - 3.4
+before_script:
+  - git clone https://github.com/syngan/vim-vimlint /tmp/vim-vimlint
+  - git clone https://github.com/ynkdir/vim-vimlparser /tmp/vim-vimlparser
+  - if [ $CI_TARGET = vim ]; then
+      sudo add-apt-repository -y ppa:nmi/vim-snapshots &&
+      sudo apt-get -y update &&
+      sudo apt-get install -y vim;
+    elif [ $CI_TARGET = neovim ]; then
+      eval "$(curl -Ss https://raw.githubusercontent.com/neovim/bot-ci/master/scripts/travis-setup.sh) nightly-x64" &&
+      pip install neovim;
+    fi
 script:
   - sh /tmp/vim-vimlint/bin/vimlint.sh -l /tmp/vim-vimlint -p /tmp/vim-vimlparser -v vimrc *.vim config lib
   - ln -s $PWD $HOME/.vim
   - mkdir $HOME/bin
-  - BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  - git fetch origin master:master
-  - git checkout master^
-  - ./bin/install
-  - git checkout $BRANCH
-  - $HOME/bin/vim-update
+  - ./bin/install -n
+matrix:
+  fast_finish: true

@@ -18,47 +18,49 @@ else
 endif
 
 let g:go_fmt_command = "goimports"
-let g:go_snippet_engine = "neosnippet"
-let g:go_fmt_autosave = 0
-
-try
-Glaive codefmt gofmt_executable='goimports'
-catch
-endtry
-
-augroup go_autoformat
-  autocmd!
-  autocmd BufEnter *.go execute(':AutoFormatBuffer')
-augroup END
+let g:go_snippet_engine = "ultisnips"
+let g:go_fmt_autosave = 1
+let g:go_bin_path = resolve(expand('<sfile>:h') . '/../../gobin')
 
 if has('nvim')
-  " run go test first to catch errors in tests and code, and then gometalinter
-  let g:gomakeprg =
-        \ 'go test -o /tmp/vim-go-test -c ./%:h && ' .
-        \ '! gometalinter ' .
-        \ '--disable=gofmt ' .
-        \ '--disable=dupl ' .
+   let g:gomakeprg =
+    \ 'go test -o /tmp/vim-go-test -c ./%:h && ' .
+      \ '! gometalinter ' .
         \ '--tests ' .
-        \ '--fast ' .
+        \ '--disable-all' .
+        \ '--enable=vet' .
+        \ '--enable=deadcode' .
+        \ '--enable=errcheck' .
         \ '--sort=severity ' .
         \ '--exclude "should have comment" ' .
-        \ '| grep "%"'
+      \ '| grep "%"'
 
   " match gometalinter + go test output
   let g:goerrorformat =
-        \ '%f:%l:%c:%t%*[^:]:\ %m,' .
-        \ '%f:%l::%t%*[^:]:\ %m,' .
-        \ '%W%f:%l: warning: %m,' .
-        \ '%E%f:%l:%c:%m,' .
-        \ '%E%f:%l:%m,' .
-        \ '%C%\s%\+%m,' .
-        \ '%-G#%.%#'
+    \ '%f:%l:%c:%t%*[^:]:\ %m,' .
+    \ '%f:%l::%t%*[^:]:\ %m,' .
+    \ '%W%f:%l: warning: %m,' .
+    \ '%E%f:%l:%c:%m,' .
+    \ '%E%f:%l:%m,' .
+    \ '%C%\s%\+%m,' .
+    \ '%-G#%.%#'
 
   " wire in Neomake
-  autocmd BufEnter *.go let &makeprg = g:gomakeprg
-  autocmd BufEnter *.go let &errorformat = g:goerrorformat
+  autocmd BufEnter *.go let &makeprg = gomakeprg
+  autocmd BufEnter *.go let &errorformat = goerrorformat
   autocmd! BufWritePost *.go Neomake!
-endif
+  let g:neomake_go_enabled_makers = []
+else
+  let g:syntastic_go_gometalinter_args = '' .
+        \ '--tests ' .
+        \ '--disable-all' .
+        \ '--enable=vet' .
+        \ '--enable=deadcode' .
+        \ '--sort=severity ' .
+        \ '--exclude "should have comment" '
+  let g:syntastic_go_checkers = ['go', 'gometalinter']
+end
+
 
 function! golang#generate_project()
   call system('find . -iname "*.go" > /tmp/gotags-filelist-project')
@@ -98,10 +100,16 @@ augroup go_projectionist
   autocmd User ProjectionistDetect call s:ProjectionistDetect()
 augroup END
 
-" if exists("g:disable_gotags_on_save") && g:disable_gotags_on_save
-"   augroup go_gotags
-"     autocmd!
-"     autocmd BufWritePost *.go call golang#generate_project()
-"     autocmd BufWritePost *.go call golang#generate_global()
-"   augroup END
-" endif
+if exists("g:disable_gotags_on_save") && g:disable_gotags_on_save
+  augroup go_gotags
+    autocmd!
+    autocmd BufWritePost *.go call golang#generate_project()
+    autocmd BufWritePost *.go call golang#generate_global()
+  augroup END
+endif
+
+augroup golang
+  autocmd FileType go compiler go
+  autocmd! BufEnter *.go call golang#buffcommands()
+augroup END
+
